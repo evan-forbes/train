@@ -1,0 +1,1 @@
+Train your machine learning algo with games that can be played in parallel. Or, you know, if you wanted the challenge of playing 1000 games of knock-off minesweeper at once, you could do that do.
