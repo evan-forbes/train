@@ -29,7 +29,7 @@ func (m *MineSweep) Play(input <-chan []byte) <-chan []byte {
 		defer close(out)
 		for in := range input {
 			if len(in) > play.MSGLIMIT {
-				m.EndGame(play.LOSE)
+				m.EndGame()
 			}
 			m.Moves++
 				out <- m.Parse(in)
@@ -43,4 +43,12 @@ func (m *MineSweep) Play(input <-chan []byte) <-chan []byte {
 
 // Note: Parsing and creating messaging is a huge thing to change
 // and changing can actually be useful for building an ai, 
-func (m *MineSweep) Parse(in []byte) {}
+func (m *MineSweep) Parse(in []byte) {
+	if len(in) == 0 {
+		m.EndGame()
+	}
+	if in[0] == 0 {
+		m.EndGame()
+	}
+	
+}

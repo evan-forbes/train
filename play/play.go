@@ -31,4 +31,5 @@ type Game interface {
 	// Play accepts the player's id as a string
 	// along with a user generated channel for input
 	Play(<-chan []byte) <-chan []byte
+	Stats()
 }
