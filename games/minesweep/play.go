@@ -40,4 +40,7 @@ func (m *MineSweep) Play(input <-chan []byte) <-chan []byte {
 	return out
 }
 
+
+// Note: Parsing and creating messaging is a huge thing to change
+// and changing can actually be useful for building an ai, 
 func (m *MineSweep) Parse(in []byte) {}

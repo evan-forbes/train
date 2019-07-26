@@ -7,10 +7,16 @@ import (
 
 // Square is the most basic modulary piece of board
 type Square struct {
-	// Bomb indicates
 	Bomb      bool
 	Uncovered bool
-	Value     int
+	// Value is the number of neighbors that have bomb
+	Value int
+}
+
+// Byte returns the byte of s.Value for responding
+// to a player after uncovering
+func (s *Square) Byte() byte {
+	return byte(s.Value)
 }
 
 // Render produces a string representation of the
