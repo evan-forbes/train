@@ -1,45 +1,43 @@
 package minesweep
 
+import "github.com/evan-forbes/train/play"
+
 type Input struct {
 	X, Y int
 }
 
-func (i *Input) Type() string {
-	return "standard"
+func (i *Input) Class() play.MessageClass {
+	return play.STANDARD
 }
-
-type Response int
-
-// for feedback I can return some enum esque type
 
 type MineSweep struct {
 	*Board
 	Moves      int
 	Bombs      int
-	Won        bool
-	Player, ID string
+	PlayerID  string
+	GameID
 }
 
-func (m *MineSweep) EndGame() {
-
+func (m *MineSweep) StartMessage() []byte {
+	// x y #bombs
+	return []byte{byte(m.Xlen), byte(m.Ylen)}
 }
 
-func (m *MineSweep) Play(input <-chan *Input) <-chan Response {
-	out := make(chan Response)
+func (m *MineSweep) Play(input <-chan []byte) <-chan []byte {
+	out := make(chan []byte)
 	go func() {
 		defer close(out)
 		for in := range input {
+			if len(in) > play.MSGLIMIT {
+				m.EndGame(play.LOSE)
+			}
 			m.Moves++
-			if m.Valid(in) {
-				result, bomb := m.Uncover(in)
-				if bomb {
-					m.EndGame()
-					break
-				}
-				out <- Response(result)
+				out <- m.Parse(in)
 			}
 		}
 		close(out)
 	}()
 	return out
 }
+
+func (m *MineSweep) Parse(in []byte) {}

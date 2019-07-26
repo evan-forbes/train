@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/evan-forbes/quickSweep/games/minesweep"
+	"github.com/evan-forbes/train/games/minesweep"
 )
 
 func main() {
