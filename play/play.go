@@ -10,8 +10,6 @@ const (
 	START MessageClass = 1 + iota
 	END
 	STANDARD
-	WIN
-	LOSE
 )
 
 const (
