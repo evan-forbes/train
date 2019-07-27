@@ -1,12 +1,17 @@
 package main
 
 import (
-	"github.com/evan-forbes/train/games/minesweep"
+	"fmt"
+	"strings"
+
+	"github.com/evan-forbes/train/games/cards"
 )
 
 func main() {
 	// cmd.Execute()
-	board := minesweep.NewBoard(10, 10)
+	nucs := []string{"A", "T", "C", "G"}
+	result := cards.CombineMany(nucs, nucs, nucs)
+	fmt.Printf("%s", strings.Join(result, "\", \""))
 
 }
 
