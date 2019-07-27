@@ -84,7 +84,7 @@ func (d *Deck) DrawRando() Card {
 
 func (d *Deck) Deal(player string, card Card) {
 	d.Lock()
-	d.Dealt[player] = append(d.Dealt[player], card)
+	d.Dealt[player][card]++
 	d.Unlock()
 }
 
