@@ -1,10 +1,108 @@
 package cards
 
 import (
+	"errors"
 	"math/rand"
 	"sync"
 	"time"
 )
+
+////////////////////////////////////////
+// 	  Card and hand: base data units
+//////////////////////////////////////
+
+// Card wraps string to repesent an
+// immutable card in a deck
+type Card string
+
+// hand is the representation of what
+// cards a player holds
+type hand map[Card]int
+
+func cardConvert(in []string) []Card {
+	var out []Card
+	for _, i := range in {
+		out = append(out, Card(i))
+	}
+	return out
+}
+
+////////////////////////////////////////
+// 	   	Deck: Card managment
+//////////////////////////////////////
+
+// Deck keeps track of cards, and fullfills the typical
+// representation of a deck of cards, but does not remain
+// ordered. Faster than an ordered deck.
+type Deck struct {
+	*sync.Mutex
+	Cards    []Card
+	Discards []Card
+	Dealt    map[string]hand
+	RSource  *rand.Rand
+}
+
+func NewDeck(players []string, cards []string) *Deck {
+	src := rand.NewSource(time.Now().UnixNano() + rand.Int63n(100))
+	hands := make(map[string]hand)
+	for _, player := range players {
+		h := make(hand)
+		hands[player] = h
+	}
+	return &Deck{
+		Cards:   cardConvert(cards),
+		Dealt:   hands,
+		RSource: rand.New(src),
+	}
+}
+
+// pull draws a card from the slice
+func (d *Deck) Draw(i int, s []Card) (Card, error) {
+	deckSize := len(s)
+	if deckSize == 0 || deckSize < i {
+		return "", errors.New("Deck is too small or empty")
+	}
+	last := deckSize - 1
+	d.Lock()
+	out := s[i]
+	// erase the pulled card by replacing
+	// it with the last card then trunkating
+	s[i] = s[last]
+	s[last] = ""
+	s = s[:last]
+	d.Unlock()
+	return out, nil
+}
+
+// DrawRando takes a card out of the deck. It does not
+// maintain order of the deck, but does run O(1)
+func (d *Deck) DrawRando() Card {
+	cardID := d.RSource.Intn(len(d.Cards))
+	out, err := d.Draw(cardID, d.Cards)
+	return out
+}
+
+func (d *Deck) Deal(player string, card Card) {
+	d.Lock()
+	d.Dealt[player] = append(d.Dealt[player], card)
+	d.Unlock()
+}
+
+func (d *Deck) DealRando(player string) {
+	card := d.DrawRando()
+	d.Deal()
+
+}
+
+func (d *Deck) DealRounds(count int) {
+	for i := 0; i < count; i++ {
+
+	}
+}
+
+////////////////////////////////////////
+// 	   String Utility Functions
+//////////////////////////////////////
 
 const suites = "H/D/S/C"
 const values = "2/3/4/5/6/7/8/9/10/J/Q/K/A"
@@ -33,66 +131,4 @@ func CombineMany(in ...[]string) []string {
 		curr = AllCombos(curr, in[i+1])
 	}
 	return curr
-}
-
-// Card wraps string to repesent an
-// immutable card in a deck
-type Card string
-
-func cardConvert(in []string) []Card {
-	var out []Card
-	for _, i := range in {
-		out = append(out, Card(i))
-	}
-	return out
-}
-
-// Deck keeps track of cards, and fullfills the typical
-// representation of a deck of cards, but does not remain
-// ordered. Faster than an ordered deck.
-type Deck struct {
-	*sync.Mutex
-	Cards    []Card
-	Discards []Card
-	Dealt    map[string][]Card
-	RSource  *rand.Rand
-}
-
-func NewDeck(players []string, cards []string) *Deck {
-	src := rand.NewSource(time.Now().UnixNano() + rand.Int63n(100))
-	hands := make(map[string][]Card)
-	for _, player := range players {
-		var hand []Card
-		hands[player] = hand
-	}
-	return &Deck{
-		Cards:   cardConvert(cards),
-		Dealt:   hands,
-		RSource: rand.New(src),
-	}
-}
-
-func Draw(cardID int64) {
-	a[i] = a[len(a)-1] // Copy last element to index i.
-	a[len(a)-1] = ""   // Erase last element (write zero value).
-	a = a[:len(a)-1]   // Truncate slice.
-}
-
-func (d *Deck) DealRando(player string) {
-	d.Lock()
-	cardID := d.RSource.Int63n(len(d.Cards))
-	a[i] = a[len(a)-1] // Copy last element to index i.
-	a[len(a)-1] = ""   // Erase last element (write zero value).
-	a = a[:len(a)-1]   // Truncate slice.
-
-	d.Unlock()
-
-}
-
-func (d *Deck) DealRounds(count int) {
-	for i := 0; i < count; i++ {
-		for player, hand := range d.Dealt {
-			hand = append(hand, d.Cards[d.RSource.Int63n(len(d.Cards))])
-		}
-	}
 }
