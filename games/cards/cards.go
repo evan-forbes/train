@@ -2,6 +2,7 @@ package cards
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"sync"
 	"time"
@@ -35,7 +36,7 @@ func cardConvert(in []string) []Card {
 // representation of a deck of cards, but does not remain
 // ordered. Faster than an ordered deck. Psuedo random.
 type Deck struct {
-	*sync.Mutex
+	Mut      *sync.Mutex
 	Cards    []Card
 	Discards []Card
 	Dealt    map[string]hand
@@ -51,6 +52,7 @@ func NewDeck(players []string, cards []string) *Deck {
 		hands[player] = h
 	}
 	return &Deck{
+		Mut:     &sync.Mutex{},
 		Cards:   cardConvert(cards),
 		Dealt:   hands,
 		RSource: rand.New(src),
@@ -64,14 +66,14 @@ func (d *Deck) Draw(i int) (Card, error) {
 		return "", errors.New("Deck is too small or empty")
 	}
 	last := len(d.Cards) - 1
-	d.Lock()
-	out := s[i]
+	d.Mut.Lock()
+	out := d.Cards[i]
 	// erase the pulled card by replacing
 	// it with the last card then trunkating
-	s[i] = s[last]
-	s[last] = ""
-	s = s[:last]
-	d.Unlock()
+	d.Cards[i] = d.Cards[last]
+	d.Cards[last] = ""
+	d.Cards = d.Cards[:last]
+	d.Mut.Unlock()
 	return out, nil
 }
 
@@ -79,41 +81,61 @@ func (d *Deck) Draw(i int) (Card, error) {
 // maintain order of the deck, but does run O(1)
 func (d *Deck) DrawRando() Card {
 	cardID := d.RSource.Intn(len(d.Cards))
-	out, err := d.Draw(cardID, d.Cards)
+	// I can ignore this error, just checked for length
+	// which is the only trigger for the error
+	out, _ := d.Draw(cardID)
 	return out
 }
 
 // Deal removes a card from the deck and assigns
 // it to a hand
 func (d *Deck) Deal(player string, card Card) {
-	d.Lock()
+	d.Mut.Lock()
 	d.Dealt[player][card]++
-	d.Unlock()
+	d.Mut.Unlock()
 }
 
 // DealRando takes a random card from the
 // deck and puts it in a player's hand
 func (d *Deck) DealRando(player string) {
 	card := d.DrawRando()
-	d.Deal()
-
+	d.Deal(player, card)
 }
 
 // DealRounds repeatedly gives each hand
 // the same amount of cards randomly drawn
 // from the deck
-func (d *Deck) DealRounds(count int) {
+func (d *Deck) DealRounds(players []string, count int) {
 	for i := 0; i < count; i++ {
-
+		for _, player := range players {
+			d.DealRando(player)
+		}
 	}
+}
+
+// Discard removes a card from a hand and into the Discards
+// slice, if the hand exists, and if the hand has a card to
+// discard
+func (d *Deck) Discard(player string, card Card) error {
+	cardCount, contains := d.Dealt[player][card]
+	if !contains {
+		return fmt.Errorf(
+			"Could not find hand/card combo: %s %s", player, card,
+		)
+	}
+	if cardCount == 0 {
+		return fmt.Errorf("hand does not contain card")
+	}
+	d.Dealt[player][card]--
+	d.Mut.Lock()
+	d.Discards = append(d.Discards, card)
+	d.Mut.Unlock()
+	return nil
 }
 
 ////////////////////////////////////////
 // 	   String Utility Functions
 //////////////////////////////////////
-
-const suites = "H/D/S/C"
-const values = "2/3/4/5/6/7/8/9/10/J/Q/K/A"
 
 // AllCombos generates a slice of strings by
 // every element of the first slice with every
