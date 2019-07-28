@@ -61,3 +61,57 @@ func TestCombineMany(t *testing.T) {
 		}
 	}
 }
+
+func deckToHand(d []Card) hand {
+	out := make(hand)
+	for _, card := range d {
+		out[card]++
+	}
+	return out
+}
+
+// abs returns the absolute value of x.
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
+func combineHands(f, s hand) hand {
+	for card, count := range s {
+		for i := 0; i < count; i++ {
+			f[card]++
+		}
+	}
+}
+
+func diffCards(first, second []Card) []Card {
+	// convert to mappings
+	f, s := deckToHand(first), deckToHand(second)
+	diffs := make(hand)
+	for card, count := range f {
+		scount, contains := s[card]
+		if !contains {
+			diffs[card] = count
+		}
+		if scount != count {
+			diffs[card] = abs(count - scount)
+		}
+
+	}
+}
+
+func checkCards(old, new []Card, hs ...hand) error {
+	// ensure cards are dealt properly
+	var totalDeal []Cards
+	// I swear I don't normally nest loops this much
+	for h := range hs {
+		for card, count := range h {
+			for i := 0; i < count; i++ {
+				totalDeal = append(totalDeal, card)
+			}
+		}
+	}
+
+}
