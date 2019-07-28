@@ -7,12 +7,22 @@ import (
 	"github.com/evan-forbes/train/games/cards"
 )
 
+const suites = "H/D/S/C"
+const values = "2/3/4/5/6/7/8/9/10/J/Q/K/A"
+
+var players = []string{"Taco Joe", "churchill", "roosevelt"}
+
+var allCards = cards.CombineMany(
+	strings.Split(values, "/"),
+	strings.Split(suites, "/"),
+)
+
 func main() {
 	// cmd.Execute()
-	nucs := []string{"A", "T", "C", "G"}
-	result := cards.CombineMany(nucs, nucs, nucs)
-	fmt.Printf("%s", strings.Join(result, "\", \""))
-
+	d := cards.NewDeck(players, allCards)
+	fmt.Println(d.Cards, "\n", d.Dealt)
+	d.DealRounds(players, 2)
+	fmt.Println(d.Cards, "\n", d.Dealt)
 }
 
 // func (b *Board) Contains(y, x int) bool {
