@@ -33,7 +33,7 @@ func cardConvert(in []string) []Card {
 
 // Deck keeps track of cards, and fullfills the typical
 // representation of a deck of cards, but does not remain
-// ordered. Faster than an ordered deck.
+// ordered. Faster than an ordered deck. Psuedo random.
 type Deck struct {
 	*sync.Mutex
 	Cards    []Card
@@ -42,6 +42,7 @@ type Deck struct {
 	RSource  *rand.Rand
 }
 
+// NewDeck returns a ready to use deck
 func NewDeck(players []string, cards []string) *Deck {
 	src := rand.NewSource(time.Now().UnixNano() + rand.Int63n(100))
 	hands := make(map[string]hand)
@@ -56,13 +57,13 @@ func NewDeck(players []string, cards []string) *Deck {
 	}
 }
 
-// pull draws a card from the slice
-func (d *Deck) Draw(i int, s []Card) (Card, error) {
-	deckSize := len(s)
-	if deckSize == 0 || deckSize < i {
+// Draw removes and returns the card at index i
+// from the deck
+func (d *Deck) Draw(i int) (Card, error) {
+	if len(d.Cards) == 0 || len(d.Cards) < i {
 		return "", errors.New("Deck is too small or empty")
 	}
-	last := deckSize - 1
+	last := len(d.Cards) - 1
 	d.Lock()
 	out := s[i]
 	// erase the pulled card by replacing
@@ -82,18 +83,25 @@ func (d *Deck) DrawRando() Card {
 	return out
 }
 
+// Deal removes a card from the deck and assigns
+// it to a hand
 func (d *Deck) Deal(player string, card Card) {
 	d.Lock()
 	d.Dealt[player][card]++
 	d.Unlock()
 }
 
+// DealRando takes a random card from the
+// deck and puts it in a player's hand
 func (d *Deck) DealRando(player string) {
 	card := d.DrawRando()
 	d.Deal()
 
 }
 
+// DealRounds repeatedly gives each hand
+// the same amount of cards randomly drawn
+// from the deck
 func (d *Deck) DealRounds(count int) {
 	for i := 0; i < count; i++ {
 
