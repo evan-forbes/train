@@ -16,8 +16,9 @@ import (
 // immutable card in a deck
 type Card string
 
-// hand is the representation of what
-// cards a player holds
+// hand is a counter for a grouping of cards.
+// the typical representation of what cards a
+// player holds.
 type hand map[Card]int
 
 func cardConvert(in []string) []Card {
