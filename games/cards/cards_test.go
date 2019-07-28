@@ -1,6 +1,9 @@
 package cards
 
 import (
+	"fmt"
+	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -62,11 +65,13 @@ func TestCombineMany(t *testing.T) {
 	}
 }
 
+///////////// Deck /////////////
 func deckToHand(d []Card) hand {
 	out := make(hand)
 	for _, card := range d {
 		out[card]++
 	}
+	fmt.Println("deck after converting: ", out)
 	return out
 }
 
@@ -84,34 +89,69 @@ func combineHands(f, s hand) hand {
 			f[card]++
 		}
 	}
+	return f
 }
 
-func diffCards(first, second []Card) []Card {
-	// convert to mappings
-	f, s := deckToHand(first), deckToHand(second)
+func checkForDiffs(f, s hand) hand {
 	diffs := make(hand)
 	for card, count := range f {
+		if card == "" {
+			continue
+		}
 		scount, contains := s[card]
 		if !contains {
+			fmt.Println("diff card", card)
 			diffs[card] = count
 		}
-		if scount != count {
+		if contains && scount != count {
+			fmt.Println("diff count: ", card, count, scount)
 			diffs[card] = abs(count - scount)
 		}
-
 	}
+	return diffs
 }
 
-func checkCards(old, new []Card, hs ...hand) error {
-	// ensure cards are dealt properly
-	var totalDeal []Cards
-	// I swear I don't normally nest loops this much
-	for h := range hs {
-		for card, count := range h {
-			for i := 0; i < count; i++ {
-				totalDeal = append(totalDeal, card)
-			}
-		}
-	}
+func diffCards(first, second []Card) hand {
+	// convert to mappings
+	f, s := deckToHand(first), deckToHand(second)
+	fToSDiff := checkForDiffs(f, s)
+	sToFDiff := checkForDiffs(s, f)
+	return combineHands(fToSDiff, sToFDiff)
 
+}
+
+// checkCards will
+func testCards(old, new []Card, hs []hand) bool {
+	diffs := diffCards(old, new)
+	totalDealt := make(hand)
+	for _, h := range hs {
+		combineHands(totalDealt, h)
+	}
+	fmt.Println("diffs: ", diffs)
+	fmt.Println("dealt: ", totalDealt)
+	return reflect.DeepEqual(diffs, totalDealt)
+}
+
+func TestDeck(t *testing.T) {
+	const suites = "H/D/S/C"
+	const values = "2/3/4/5/6/7/8/9/10/J/Q/K/A"
+	var players = []string{"Taco Joe", "churchill", "roosevelt"}
+	var allCards = CombineMany(
+		strings.Split(values, "/"),
+		strings.Split(suites, "/"),
+	)
+	d := NewDeck(players, allCards)
+	og := NewDeck(players, allCards)
+
+	d.DealRounds(players, 4)
+	fmt.Println(og.Cards)
+	fmt.Println(d.Cards)
+	var hands []hand
+	for _, h := range d.Dealt {
+		hands = append(hands, h)
+	}
+	ok := testCards(og.Cards, d.Cards, hands)
+	if !ok {
+		t.Error("Cards are missing or inflated!")
+	}
 }
