@@ -86,7 +86,7 @@ func (d *Deck) Draw(i int) (Card, error) {
 // maintain order of the deck, but does run O(1)
 func (d *Deck) DrawRando() Card {
 	cardID := d.RSource.Intn(len(d.Cards))
-	// I can ignore this error, just checked for length
+	// we can ignore this error, just checked for length
 	// which is the only trigger for the error
 	out, _ := d.Draw(cardID)
 	return out
