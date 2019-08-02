@@ -7,6 +7,7 @@ type ClassyErr interface {
 
 type ErrClass int
 
+// I'm not going to use all of these
 const (
 	NONFATAL ErrClass = 1 + iota
 	FATAL
