@@ -41,7 +41,7 @@ type Board struct {
 	// Contents holds the data representation of the board
 	Contents   [][]*Square
 	Xlen, Ylen int
-	rsource    rand.Source
+	rsource    *rand.Rand
 }
 
 // NewBoard functions as the constructor for the Board type
@@ -99,17 +99,30 @@ func (b *Board) UncoverAll() {
 // AddBomb will add a hidden bomb to the board, updating the
 // state of the neighboring squares to reflect the presence
 // of the bomb
-func (b *Board) AddBomb(y, x int) {
+func (b *Board) AddBomb(x, y int) bool {
 	sq := b.Contents[y][x]
 	// stop double bombing
 	if sq.Bomb {
-		return
+		return false
 	}
 	sq.Bomb = true
 	// change the neighbors to reftlect bomb loc
 	nebs := b.neighbors(y, x)
 	for _, neb := range nebs {
 		b.Contents[neb.Y][neb.X].Value++
+	}
+	return true
+}
+
+// AddRandomBomb picks a psuedo random part of the
+// board and adds a bomb.
+// will keep spinning forever if there are not
+// enough spaces for new bombs.
+func (b *Board) AddRandomBomb() {
+	rc := b.randomCoord()
+	success := b.AddBomb(rc.X, rc.Y)
+	if !success {
+		b.AddRandomBomb()
 	}
 }
 
@@ -145,4 +158,11 @@ func (b *Board) Render() string {
 
 type coord struct {
 	X, Y int
+}
+
+func (b *Board) randomCoord() coord {
+	var out coord
+	out.X = b.rsource.Intn(b.Xlen)
+	out.Y = b.rsource.Intn(b.Ylen)
+	return out
 }

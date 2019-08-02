@@ -8,10 +8,10 @@ import (
 // by rendering an uncovered board with bombs being added
 func TestRender(t *testing.T) {
 	board := NewBoard(10, 10)
-	board.AddBomb(3, 4)
-	board.AddBomb(3, 5)
-	board.AddBomb(3, 5)
-	board.AddBomb(5, 6)
+	board.AddBomb(4, 3)
+	board.AddBomb(5, 3)
+	board.AddBomb(5, 3)
+	board.AddBomb(6, 5)
 	board.AddBomb(0, 0)
 	board.UncoverAll()
 	result := board.Render()
