@@ -1,13 +1,15 @@
 package minesweep
 
-import "github.com/evan-forbes/train/play"
+import "errors"
 
 type Input struct {
 	X, Y int
 }
 
-func (i *Input) Class() play.MessageClass {
-	return play.STANDARD
+func (i *Input) Unmarshall(msg []byte) error {
+	if len(msg) < 2 {
+		return errors.New("*Failure* message is too small")
+	}
 }
 
 type MineSweep struct {
@@ -20,22 +22,7 @@ type MineSweep struct {
 
 func (m *MineSweep) StartMessage() []byte {
 	// x y #bombs
-	return []byte{byte(m.Xlen), byte(m.Ylen)}
-}
-
-func (m *MineSweep) Play(input <-chan []byte) <-chan []byte {
-	out := make(chan []byte)
-	go func() {
-		defer close(out)
-		for in := range input {
-			if len(in) > 1024 {
-				// m.EndGame()
-			}
-			m.Moves++
-			out <- m.Parse(in)
-		}
-	}()
-	return out
+	return []byte{byte(1), byte(m.Xlen), byte(m.Ylen)}
 }
 
 // Note: Parsing and creating messaging is a huge thing to change
