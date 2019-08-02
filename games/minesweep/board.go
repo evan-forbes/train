@@ -1,8 +1,11 @@
 package minesweep
 
 import (
+	"errors"
 	"fmt"
+	"math/rand"
 	"strings"
+	"time"
 )
 
 // Square is the most basic modulary piece of board
@@ -38,10 +41,11 @@ type Board struct {
 	// Contents holds the data representation of the board
 	Contents   [][]*Square
 	Xlen, Ylen int
+	rsource    rand.Source
 }
 
 // NewBoard functions as the constructor for the Board type
-func NewBoard(y, x int) *Board {
+func NewBoard(x, y int) *Board {
 	var conts [][]*Square
 	for i := 0; i < y; i++ {
 		var row []*Square
@@ -54,16 +58,18 @@ func NewBoard(y, x int) *Board {
 		}
 		conts = append(conts, row)
 	}
+	src := rand.NewSource(time.Now().UnixNano() + rand.Int63n(100))
 	return &Board{
 		Contents: conts,
 		Xlen:     x,
 		Ylen:     y,
+		rsource:  rand.New(src),
 	}
 }
 
 // Valid ensures that a given point in with the range of
 // the board.
-func (b *Board) Valid(in *Input) bool {
+func (b *Board) valid(in *Input) bool {
 	xval := in.X >= 0 && in.X < b.Xlen
 	yval := in.Y >= 0 && in.Y < b.Ylen
 	return xval && yval
@@ -72,10 +78,13 @@ func (b *Board) Valid(in *Input) bool {
 // Uncover acts on the user's input to uncover a specific square
 // on the board b, will return false if a bomb is on the board
 // indicating failure
-func (b *Board) Uncover(in *Input) (int, bool) {
+func (b *Board) Uncover(in *Input) (int, bool, error) {
+	if !b.valid(in) {
+		return 0, false, errors.New("out of range of board")
+	}
 	sq := b.Contents[in.Y][in.X]
 	sq.Uncovered = true
-	return sq.Value, sq.Bomb
+	return sq.Value, sq.Bomb, nil
 }
 
 // UncoverAll reveals the value of each sqaure on the board
