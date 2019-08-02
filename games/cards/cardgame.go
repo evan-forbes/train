@@ -1,6 +1,7 @@
 package cards
 
 import (
+	"github.com/evan-forbes/train/comm"
 	"github.com/evan-forbes/train/deck"
 )
 
