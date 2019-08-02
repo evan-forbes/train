@@ -5,17 +5,48 @@ type ClassyErr interface {
 	error
 }
 
+type ErrClass int
+
+const (
+	NONFATAL ErrClass = 1 + iota
+	FATAL
+	REBOOT
+	SHUTDOWN
+	CONTINUE
+	WARNUSER
+)
+
+var errStrings = []string{
+	"NONFATAL", "FATAL", "REBOOT", "SHUTDOWN", "CONTINUE", "WARNUSER",
+}
+
+func (ec ErrClass) String() string {
+	if ec < 1 || ec > ErrClass(len(errStrings)) {
+		return "UNCLASSIFIED"
+	}
+	return errStrings[ec]
+}
+
 type classyErr struct {
 	class string
 	error
 }
 
-func (ce *classyError) Class() string {
-	return class
+func (ce *classyErr) Class() string {
+	return ce.class
 }
 
-type ErrClass int
+func (ce *classyErr) Cause() error {
+	return ce.error
+}
 
-func Classify(class ErrClass, err error) ClassyErr {
+func (ce *classyErr) Error() string {
+	return ce.class + ce.error.Error()
+}
 
+func Classify(c ErrClass, err error) ClassyErr {
+	return &classyErr{
+		class: c.String(),
+		error: err,
+	}
 }

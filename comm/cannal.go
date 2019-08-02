@@ -1,5 +1,9 @@
 package comm
 
+import (
+	"fmt"
+)
+
 type Handler func(id string, msg []byte) error
 
 type ErrHandler func(id string, err error)
@@ -43,8 +47,8 @@ func (c *Cannal) dial(id string) chan []byte {
 // Quit closes all communation channels to any outstanding
 // connections
 func (c *Cannal) Quit() {
-	for _, comm := range c.Conns {
-		close(comm)
+	for _, conn := range c.Conns {
+		close(conn)
 	}
 }
 
@@ -71,7 +75,12 @@ func (c *Cannal) routeMsgs(id string, msgs <-chan []byte) {
 // routeErrs connects an error and its reporter to
 // the appropriate prescribed ErrHandler
 func (c *Cannal) routeErr(id string, err error) {
-	handleFunc, contains := c.ErrHandlers[err.Error()]
+	classyerr, ok := err.(ClassyErr)
+	if !ok {
+		fmt.Println("Could not handle err:", err)
+		return
+	}
+	handleFunc, contains := c.ErrHandlers[classyerr.Class()]
 	if !contains {
 		return
 	}
